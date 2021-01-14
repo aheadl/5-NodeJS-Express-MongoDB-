@@ -49,7 +49,8 @@ app.use(
     store: new FileStore(),
   })
 );
-
+app.use("/", indexRouter);
+app.use("/users", usersRouter);
 //<-------------------Add authentication here--------------------------------
 // Write custom middleware function auth
 function auth(req, res, next) {
@@ -58,35 +59,35 @@ function auth(req, res, next) {
   //if cookie is not properly signed - cookie not included - means client has not been authenticated
   // if (!req.signedCookies.user) {
   if (!req.session.user) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      const err = new Error("You are not authenticated - no signed cookies!");
-      res.setHeader("WWW-Authenticate", "Basic");
-      err.status = 401;
-      return next(err);
-    }
+    // const authHeader = req.headers.authorization;
+    // if (!authHeader) {
+    const err = new Error("You are not authenticated - no signed cookies!");
+    //res.setHeader("WWW-Authenticate", "Basic");
+    err.status = 401;
+    return next(err);
+    //}
     //When there is an authorization header
     //Don't need to require Buffer - you can just use it
-    const auth = Buffer.from(authHeader.split(" ")[1], "base64")
-      .toString()
-      .split(":");
-    //parse username and password from auth constant
-    const user = auth[0];
-    const pass = auth[1];
-    if (user === "admin" && pass === "password") {
-      //set up a cookie if user authenticated
-      //res.cookie("user", "admin", { signed: true }); //3rd param optional - tells Express to use a signed key
-      req.session.user = "admin";
-      return next(); // authorized - pass control to the next middleware function
-    } else {
-      const err = new Error("You are not authenticated - login incorrect!");
-      res.setHeader("WWW-Authenticate", "Basic");
-      err.status = 401;
-      return next(err);
-    }
+    // const auth = Buffer.from(authHeader.split(" ")[1], "base64")
+    //   .toString()
+    //   .split(":");
+    // //parse username and password from auth constant
+    // const user = auth[0];
+    // const pass = auth[1];
+    // if (user === "admin" && pass === "password") {
+    //   //set up a cookie if user authenticated
+    //   //res.cookie("user", "admin", { signed: true }); //3rd param optional - tells Express to use a signed key
+    //   req.session.user = "admin";
+    //   return next(); // authorized - pass control to the next middleware function
+    // } else {
+    //   const err = new Error("You are not authenticated - login incorrect!");
+    //   res.setHeader("WWW-Authenticate", "Basic");
+    //   err.status = 401;
+    //   return next(err);
+    // }
   } else {
     //if (req.signedCookies.user === "admin") {
-    if (req.session.user === "admin") {
+    if (req.session.user === "authenticated") {
       return next(); // pass client to next middleware function
     } else {
       const err = new Error(
@@ -101,9 +102,9 @@ function auth(req, res, next) {
 app.use(auth);
 
 app.use(express.static(path.join(__dirname, "public")));
-
-app.use("/", indexRouter);
-app.use("/users", usersRouter);
+//Move this above auth function so that users can access the router (since we have way for users to register) before they are authenticated. We want unauth users to access the routers as well, to be able to create an account
+// app.use("/", indexRouter);
+// app.use("/users", usersRouter);
 app.use("/campsites", campsiteRouter);
 app.use("/promotions", promotionRouter);
 app.use("/partners", partnerRouter);
