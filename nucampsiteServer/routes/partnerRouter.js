@@ -4,23 +4,6 @@ const partnerRouter = express.Router();
 
 partnerRouter
   .route("/")
-
-  // .get((req, res) => {
-  //   res.end("Will send all the partners to you");
-  // })
-  // .post((req, res) => {
-  //   res.end(
-  //     `Will add the partners: ${req.body.name} with description: ${req.body.description}`
-  //   );
-  // })
-  // .put((req, res) => {
-  //   res.statusCode = 403;
-  //   res.end("PUT operation not supported on partner");
-  // })
-  // .delete((req, res) => {
-  //   res.end("Deleting all partners");
-  // });
-
   .get((req, res, next) => {
     Partner.find()
       .then((partners) => {

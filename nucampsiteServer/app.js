@@ -34,7 +34,53 @@ app.set("view engine", "jade");
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser("12345-67890-09876-54321"));
+//<-------------------Add authentication here--------------------------------
+// Write custom middleware function auth
+function auth(req, res, next) {
+  console.log(req.headers);
+  //if cookie is not properly signed - cookie not included - means client has not been authenticated
+  if (!req.signedCookies.user) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      const err = new Error("You are not authenticated - no signed cookies!");
+      res.setHeader("WWW-Authenticate", "Basic");
+      err.status = 401;
+      return next(err);
+    }
+    //When there is an authorization header
+    //Don't need to require Buffer - you can just use it
+    const auth = Buffer.from(authHeader.split(" ")[1], "base64")
+      .toString()
+      .split(":");
+    //parse username and password from auth constant
+    const user = auth[0];
+    const pass = auth[1];
+    if (user === "admin" && pass === "password") {
+      //set up a cookie if user authenticated
+      res.cookie("user", "admin", { signed: true }); //3rd param optional - tells Express to use a signed key
+      return next(); // authorized - pass control to the next middleware function
+    } else {
+      const err = new Error("You are not authenticated - login incorrect!");
+      res.setHeader("WWW-Authenticate", "Basic");
+      err.status = 401;
+      return next(err);
+    }
+  } else {
+    if (req.signedCookies.user === "admin") {
+      return next(); // pass client to next middleware function
+    } else {
+      const err = new Error(
+        "You are not authenticated - signed cookie user is not admin!"
+      );
+      err.status = 401;
+      return next(err);
+    }
+  }
+}
+
+app.use(auth);
+
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
