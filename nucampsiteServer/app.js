@@ -1,17 +1,19 @@
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
-var cookieParser = require("cookie-parser");
+//var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 //Add express session
 const session = require("express-session");
-const FileStore = require("session-file-store")(session);
+//const FileStore = require("session-file-store")(session);
 //passport & authenticate
 const passport = require("passport");
-const authenticate = require("./authenticate");
+//const authenticate = require("./authenticate");
+const config = require("./config");
 
 const mongoose = require("mongoose");
-const url = "mongodb://localhost:27017/nucampsite";
+//const url = "mongodb://localhost:27017/nucampsite";
+const url = config.mongoUrl;
 const connect = mongoose.connect(url, {
   useCreateIndex: true,
   useFindAndModify: false,
@@ -43,72 +45,72 @@ app.use(express.urlencoded({ extended: false }));
 //Remove cookieParser since using Express session
 //app.use(cookieParser("12345-67890-09876-54321"));
 
-app.use(
-  session({
-    name: "session-id",
-    secret: "12345-67890-09876-54321",
-    saveUninitialized: false,
-    resave: false,
-    store: new FileStore(),
-  })
-);
+// app.use(
+//   session({
+//     name: "session-id",
+//     secret: "12345-67890-09876-54321",
+//     saveUninitialized: false,
+//     resave: false,
+//     store: new FileStore(),
+//   })
+// );
 
-//add passport initialize
-app.use(passport.initialize());
-app.use(passport.session());
+// //add passport initialize
+// app.use(passport.initialize());
+// app.use(passport.session());
 
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 //<-------------------Add authentication here--------------------------------
 // Write custom middleware function auth
-function auth(req, res, next) {
-  // console.log(req.headers);
-  console.log(req.user);
-  //if cookie is not properly signed - cookie not included - means client has not been authenticated
-  // if (!req.signedCookies.user) {
-  // if (!req.session.user) {
-    if (!req.user) {
-      // const authHeader = req.headers.authorization;
-      // if (!authHeader) {
-      const err = new Error("You are not authenticated - no signed cookies!");
-      //res.setHeader("WWW-Authenticate", "Basic");
-      err.status = 401;
-      return next(err);
-      //}
-      //When there is an authorization header
-      //Don't need to require Buffer - you can just use it
-      // const auth = Buffer.from(authHeader.split(" ")[1], "base64")
-      //   .toString()
-      //   .split(":");
-      // //parse username and password from auth constant
-      // const user = auth[0];
-      // const pass = auth[1];
-      // if (user === "admin" && pass === "password") {
-      //   //set up a cookie if user authenticated
-      //   //res.cookie("user", "admin", { signed: true }); //3rd param optional - tells Express to use a signed key
-      //   req.session.user = "admin";
-      //   return next(); // authorized - pass control to the next middleware function
-      // } else {
-      //   const err = new Error("You are not authenticated - login incorrect!");
-      //   res.setHeader("WWW-Authenticate", "Basic");
-      //   err.status = 401;
-      //   return next(err);
-      // }
-    } else {
-      //if (req.signedCookies.user === "admin") {
-     //if (req.session.user === "authenticated") {
-        return next(); // pass client to next middleware function
-    //   } else {
-    //     const err = new Error(
-    //       "You are not authenticated - signed cookie user is not admin!"
-    //     );
-    //     err.status = 401;
-    //     return next(err);
-    //   }
-    // }
-}
-}
+// function auth(req, res, next) {
+//   // console.log(req.headers);
+//   console.log(req.user);
+//   //if cookie is not properly signed - cookie not included - means client has not been authenticated
+//   // if (!req.signedCookies.user) {
+//   // if (!req.session.user) {
+//     if (!req.user) {
+//       // const authHeader = req.headers.authorization;
+//       // if (!authHeader) {
+//       const err = new Error("You are not authenticated - no signed cookies!");
+//       //res.setHeader("WWW-Authenticate", "Basic");
+//       err.status = 401;
+//       return next(err);
+//       //}
+//       //When there is an authorization header
+//       //Don't need to require Buffer - you can just use it
+//       // const auth = Buffer.from(authHeader.split(" ")[1], "base64")
+//       //   .toString()
+//       //   .split(":");
+//       // //parse username and password from auth constant
+//       // const user = auth[0];
+//       // const pass = auth[1];
+//       // if (user === "admin" && pass === "password") {
+//       //   //set up a cookie if user authenticated
+//       //   //res.cookie("user", "admin", { signed: true }); //3rd param optional - tells Express to use a signed key
+//       //   req.session.user = "admin";
+//       //   return next(); // authorized - pass control to the next middleware function
+//       // } else {
+//       //   const err = new Error("You are not authenticated - login incorrect!");
+//       //   res.setHeader("WWW-Authenticate", "Basic");
+//       //   err.status = 401;
+//       //   return next(err);
+//       // }
+//     } else {
+//       //if (req.signedCookies.user === "admin") {
+//      //if (req.session.user === "authenticated") {
+//         return next(); // pass client to next middleware function
+//     //   } else {
+//     //     const err = new Error(
+//     //       "You are not authenticated - signed cookie user is not admin!"
+//     //     );
+//     //     err.status = 401;
+//     //     return next(err);
+//     //   }
+//     // }
+// }
+// }
 
 app.use(auth);
 
