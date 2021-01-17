@@ -71,7 +71,7 @@ campsiteRouter
       `POST operation not supported on /campsites/${req.params.campsiteId}`
     );
   })
-  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+  .put(authenticate.verifyUser,  (req, res, next) => {
     Campsite.findByIdAndUpdate(
       req.params.campsiteId,
       {
@@ -79,6 +79,7 @@ campsiteRouter
       },
       { new: true }
     )
+    
       .then((campsite) => {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -202,7 +203,7 @@ campsiteRouter
       `POST operation not supported on /campsites/${req.params.campsiteId}/comments/${req.params.commentId}`
     );
   })
-  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+  .put(authenticate.verifyUser,  (req, res, next) => {
     Campsite.findById(req.params.campsiteId)
       .then((campsite) => {
         if (campsite && campsite.comments.id(req.params.commentId)) {
@@ -244,11 +245,16 @@ campsiteRouter
   })
   .delete(
     authenticate.verifyUser,
-    authenticate.verifyAdmin,
+    
     (req, res, next) => {
       Campsite.findById(req.params.campsiteId)
         .then((campsite) => {
           if (campsite && campsite.comments.id(req.params.commentId)) {
+            if (
+            campsite.comments
+              .id(req.params.comments)
+              .author._id.equals(req.user._id)
+          ) {
             campsite.comments.id(req.params.commentId).remove();
             campsite
               .save()
@@ -267,6 +273,9 @@ campsiteRouter
             err.status = 404;
             return next(err);
           }
+        } else {
+          err.status = 403;
+        }
         })
         .catch((err) => next(err));
     }
