@@ -4,7 +4,7 @@ var path = require("path");
 //var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 //Add express session
-const session = require("express-session");
+//const session = require("express-session");
 //const FileStore = require("session-file-store")(session);
 //passport & authenticate
 const passport = require("passport");
@@ -55,8 +55,8 @@ app.use(express.urlencoded({ extended: false }));
 //   })
 // );
 
-// //add passport initialize
-// app.use(passport.initialize());
+//add passport initialize
+ app.use(passport.initialize());
 // app.use(passport.session());
 
 
@@ -112,7 +112,7 @@ app.use("/users", usersRouter);
 // }
 // }
 
-app.use(auth);
+//app.use(auth);
 
 app.use(express.static(path.join(__dirname, "public")));
 //Move this above auth function so that users can access the router (since we have way for users to register) before they are authenticated. We want unauth users to access the routers as well, to be able to create an account
