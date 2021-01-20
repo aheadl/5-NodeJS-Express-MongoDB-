@@ -71,7 +71,7 @@ campsiteRouter
       `POST operation not supported on /campsites/${req.params.campsiteId}`
     );
   })
-  .put(authenticate.verifyUser,  (req, res, next) => {
+  .put(authenticate.verifyUser, (req, res, next) => {
     Campsite.findByIdAndUpdate(
       req.params.campsiteId,
       {
@@ -79,7 +79,7 @@ campsiteRouter
       },
       { new: true }
     )
-    
+
       .then((campsite) => {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -203,16 +203,14 @@ campsiteRouter
       `POST operation not supported on /campsites/${req.params.campsiteId}/comments/${req.params.commentId}`
     );
   })
-  .put(authenticate.verifyUser,  (req, res, next) => {
+  .put(authenticate.verifyUser, (req, res, next) => {
     Campsite.findById(req.params.campsiteId)
       .then((campsite) => {
-        if (campsite && campsite.comments.id(req.params.commentId)) {
+        let foundComment = campsite.comments.id(req.params.commentId);
+        if (campsite && foundComment) {
           //allow user to update comments that they submitted
-          if (
-            campsite.comments
-              .id(req.params.comments)
-              .author._id.equals(req.user._id)
-          ) {
+
+          if (foundComment.author._id.equals(req.user._id)) {
             if (req.body.rating) {
               campsite.comments.id(req.params.commentId).rating =
                 req.body.rating;
@@ -228,42 +226,51 @@ campsiteRouter
                 res.json(campsite);
               })
               .catch((err) => next(err));
-          } else if (!campsite) {
-            err = new Error(`Campsite ${req.params.campsiteId} not found`);
-            err.status = 404;
-            return next(err);
           } else {
-            err = new Error(`Comment ${req.params.commentId} not found`);
-            err.status = 404;
+            err = new Error(
+              "You did not add the comment you are trying to update"
+            );
+            err.status = 403;
             return next(err);
           }
+        } else if (!campsite) {
+          err = new Error(`Campsite ${req.params.campsiteId} not found`);
+          err.status = 404;
+          return next(err);
         } else {
-          err.status = 403;
+          err = new Error(`Comment ${req.params.commentId} not found`);
+          err.status = 404;
+          return next(err);
         }
       })
       .catch((err) => next(err));
   })
   .delete(
     authenticate.verifyUser,
-    
+
     (req, res, next) => {
       Campsite.findById(req.params.campsiteId)
         .then((campsite) => {
           if (campsite && campsite.comments.id(req.params.commentId)) {
             if (
-            campsite.comments
-              .id(req.params.comments)
-              .author._id.equals(req.user._id)
-          ) {
-            campsite.comments.id(req.params.commentId).remove();
-            campsite
-              .save()
-              .then((campsite) => {
-                res.statusCode = 200;
-                res.setHeader("Content-Type", "application/json");
-                res.json(campsite);
-              })
-              .catch((err) => next(err));
+              campsite.comments
+                .id(req.params.comments)
+                .author._id.equals(req.user._id)
+            ) {
+              campsite.comments.id(req.params.commentId).remove();
+              campsite
+                .save()
+                .then((campsite) => {
+                  res.statusCode = 200;
+                  res.setHeader("Content-Type", "application/json");
+                  res.json(campsite);
+                })
+                .catch((err) => next(err));
+            } else {
+              err = new Error("You cannot delete someone else's comment");
+              err.status = 403;
+              return next(err);
+            }
           } else if (!campsite) {
             err = new Error(`Campsite ${req.params.campsiteId} not found`);
             err.status = 404;
@@ -273,9 +280,6 @@ campsiteRouter
             err.status = 404;
             return next(err);
           }
-        } else {
-          err.status = 403;
-        }
         })
         .catch((err) => next(err));
     }

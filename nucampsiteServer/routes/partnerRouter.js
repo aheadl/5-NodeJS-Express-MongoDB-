@@ -25,11 +25,11 @@ partnerRouter
       })
       .catch((err) => next(err));
   })
-  .put(authenticate.verifyUser, (req, res) => {
+  .put((req, res) => {
     res.statusCode = 403;
     res.end("PUT operation not supported on /partners");
   })
-  .delete(authenticate.verifyAdmin, (req, res, next) => {
+  .delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Partner.deleteMany()
       .then((response) => {
         res.statusCode = 200;
@@ -59,7 +59,7 @@ partnerRouter
     res.statusCode = 403;
     res.end(`POST operation not supported on /partner/${req.params.partnerId}`);
   })
-  .put(authenticate.verifyAdmin, authenticate.verifyAdmin, (req, res) => {
+  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
     Partner.findByIdAndUpdate(
       req.params.partnerId,
       {

@@ -39,9 +39,9 @@ var app = express();
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(logger("dev")); //logs every http request
+app.use(express.json()); //parses data from request body
+app.use(express.urlencoded({ extended: false })); //parses url 
 //Remove cookieParser since using Express session
 //app.use(cookieParser("12345-67890-09876-54321"));
 
